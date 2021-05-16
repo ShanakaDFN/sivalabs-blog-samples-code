@@ -1,4 +1,3 @@
-from .forms import ProductForm
 from .models import Agent, Brand, ContactPerson, Courier, Customer, Model, Product, Stakeholder, Supplier
 from django.contrib import admin
 
@@ -12,11 +11,9 @@ class ContactPersonAdmin(admin.ModelAdmin):
 
 
 class ProductAdmin(admin.ModelAdmin):
-    form = ProductForm
-
     list_display = (
         'product_name',
-        'Inventory_code',
+        'inventory_code',
         'oem',
         'hs_code',
         'unit_price'
@@ -26,12 +23,13 @@ class ProductAdmin(admin.ModelAdmin):
         'created_date',
         'modified_date',
         )
+    ordering = ('inventory_code',)
     fieldsets = ((
         None, {
             'fields': (
                 'product_name', 
                 'tag_name', 
-                'Inventory_code',
+                'inventory_code',
                 'oem',
                 'hs_code',
                 'unit_price',

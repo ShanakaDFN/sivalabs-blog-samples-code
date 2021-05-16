@@ -11,14 +11,8 @@ class Shipment(models.Model):
         SEA = 2
 
     type = models.IntegerField(choices=Type.choices)
-    supplier = models.OneToOneField(
-        Supplier,
-        on_delete=models.CASCADE,
-    )
-    agent = models.OneToOneField(
-        Agent,
-        on_delete=models.CASCADE,
-    )
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True)
+    agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True)
     volume = models.DecimalField(max_digits=5, decimal_places=2)
     weight = models.DecimalField(max_digits=5, decimal_places=2)
     order_placement_date = models.DateField()
@@ -26,7 +20,7 @@ class Shipment(models.Model):
     loading_date = models.DateField()
     received_date = models.DateField()
     product_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    freight_Charge = models.DecimalField(max_digits=6, decimal_places=2)
+    freight_charge = models.DecimalField(max_digits=6, decimal_places=2)
     sl_transport_charge = models.DecimalField(max_digits=6, decimal_places=2)
     ch_transport_charge = models.DecimalField(max_digits=6, decimal_places=2)
     initial_payment = models.DecimalField(max_digits=6, decimal_places=2)
@@ -35,6 +29,7 @@ class Shipment(models.Model):
     alibaba_balance_charge = models.DecimalField(max_digits=6, decimal_places=2)
     alibaba_total_charge = models.DecimalField(max_digits=6, decimal_places=2)
     stamp_duty = models.DecimalField(max_digits=6, decimal_places=2)
+    agent_charge = models.DecimalField(max_digits=6, decimal_places=2)
     total_shipping_cost = models.DecimalField(max_digits=6, decimal_places=2)
     shipping_cost_factor = models.DecimalField(max_digits=6, decimal_places=2)
     exchange_rate = models.DecimalField(max_digits=6, decimal_places=2)
@@ -48,30 +43,24 @@ class Shipment(models.Model):
         CLOSE = 5
 
     status = models.IntegerField(choices=Status.choices)
-    created_by = models.CharField(max_length=20)
-    created_date = models.DateTimeField()
-    modified_by = models.CharField(max_length=20)
-    modified_date = models.DateTimeField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.shipment_code
 
 
+
 class ShipmentDetail(models.Model):
+    class Meta:
+        unique_together = (('shipment', 'product'),)
+    
     shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE)
-    product = models.OneToOneField(
-        Product,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0)
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
-    amount = models.DecimalField(max_digits=6, decimal_places=2)
+    amount = models.DecimalField(max_digits=7, decimal_places=2)
 
-    #@property
-    #def get_amount(self):
-        #return self.quantity * self.unit_price
-    #amount = property(get_amount)
 
     class Status(models.IntegerChoices):
         DELETED = 0
@@ -80,28 +69,16 @@ class ShipmentDetail(models.Model):
         CLOSE = 3
 
     status = models.IntegerField(choices=Status.choices)
-
-    def __str__(self):
-        return self.shipment, self.product
 
 
 class Inventory(models.Model):
-    product = models.OneToOneField(
-        Product,
-        on_delete=models.CASCADE,
-    )
-
-    shipment = models.OneToOneField(
-        Shipment,
-        on_delete=models.CASCADE,
-    )
-
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    shipment = models.ForeignKey(Shipment, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField(default=0)
-    product_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    shipping_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    wholesale_price = models.DecimalField(max_digits=6, decimal_places=2)
-    retail_price = models.DecimalField(max_digits=6, decimal_places=2)
-    warranty_price = models.DecimalField(max_digits=6, decimal_places=2)
+    cost = models.DecimalField(max_digits=8, decimal_places=2)
+    wholesale_price = models.DecimalField(max_digits=8, decimal_places=2)
+    retail_price = models.DecimalField(max_digits=8, decimal_places=2)
+    warranty_price = models.DecimalField(max_digits=8, decimal_places=2)
 
     class Status(models.IntegerChoices):
         DELETED = 0
@@ -110,23 +87,14 @@ class Inventory(models.Model):
         CLOSE = 3
 
     status = models.IntegerField(choices=Status.choices)
-    created_by = models.CharField(max_length=20)
-    created_date = models.DateTimeField()
-    modified_by = models.CharField(max_length=20)
-    modified_date = models.DateTimeField()
-
-    def __str__(self):
-        return self.shipment, self.product, self.quantity
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
 
 
-class Invoice(models.Model):
-    invoice_no = models.CharField(max_length=6)
-    invoice_date = models.DateField()
-    total_amount = models.DecimalField(max_digits=6, decimal_places=2)
-    customer = models.OneToOneField(
-        Customer,
-        on_delete=models.CASCADE,
-    )
+class Order(models.Model):
+    order_no = models.CharField(max_length=6)
+    order_date = models.DateField()
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
     contact_no = models.CharField(max_length=10)
     note = models.CharField(max_length=100)
     payment_date = models.DateField()
@@ -137,26 +105,19 @@ class Invoice(models.Model):
         CLOSE = 2
 
     status = models.IntegerField(choices=Status.choices)
-    created_by = models.CharField(max_length=20)
-    created_date = models.DateTimeField()
-    modified_by = models.CharField(max_length=20)
-    modified_date = models.DateTimeField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.invoice_no
+        return self.order_no
 
 
-class InvoiceDetail(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
-
-    product = models.OneToOneField(
-        Product,
-        on_delete=models.CASCADE,
-    )
-
+class OrderDetail(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField(default=0)
-    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
-    amount = models.DecimalField(max_digits=6, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=8, decimal_places=2)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
 
-    def __str__(self):
-        return self.invoice
+    #def __str__(self):
+    #    return self.order

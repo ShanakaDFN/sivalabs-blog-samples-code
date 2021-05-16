@@ -23,8 +23,8 @@ class Model(models.Model):
 class Product(models.Model):
     product_name = models.CharField(max_length=150)
     tag_name = models.CharField(max_length=150)
-    Inventory_code = models.CharField(max_length=8)
-    oem = models.CharField(max_length=20)
+    inventory_code = models.CharField(max_length=8)
+    oem = models.CharField(max_length=50)
     hs_code = models.CharField(max_length=20)
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     length = models.DecimalField(max_digits=6, decimal_places=2)
@@ -102,7 +102,7 @@ class ContactPerson(models.Model):
 
 
 class Customer(models.Model):
-    customer_name = models.CharField(max_length=20)
+    customer_name = models.CharField(max_length=50)
 
     class Type(models.IntegerChoices):
         NORMAL = 0
@@ -121,10 +121,8 @@ class Customer(models.Model):
         BLACKLIST = 3
 
     status = models.IntegerField(choices=Status.choices)
-    created_by = models.CharField(max_length=20)
-    created_date = models.DateTimeField()
-    modified_by = models.CharField(max_length=20)
-    modified_date = models.DateTimeField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.customer_name
